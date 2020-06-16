@@ -1,0 +1,100 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.example.android.architecture.blueprints.todoapp.tasks
+
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.example.android.architecture.blueprints.todoapp.data.Task
+import com.example.android.architecture.blueprints.todoapp.data.source.FakeTestRepository
+import com.example.android.architecture.blueprints.todoapp.getOrAwaitValue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.hamcrest.CoreMatchers.*
+import org.hamcrest.MatcherAssert.assertThat
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+
+//The AndroidX Test libraries include classes and methods that provide you with versions of components
+// like Applications and Activities that are meant for tests. Need to be added to gradle.
+
+// AndroidX Test is a collection of libraries for testing. It includes classes and methods that
+// give you versions of components like Applications and Activities, that are meant for tests.
+// As an example, this code you wrote is an example of an AndroidX Test function for getting an application context.
+
+// The simulated Android environment that AndroidX Test uses for local tests is provided by Robolectric.
+// Robolectric is a library that creates a simulated Android environment for tests and runs faster than
+// booting up an emulator or running on a device.
+
+//Add @RunWith(AndroidJUnit4::class) annotation in case you need the
+// construct the viewModel with use of ApplicationProvider.getApplicationContext().
+
+/**
+ * Unit tests for the implementation of [TasksViewModel]
+ */
+@ExperimentalCoroutinesApi
+class TasksViewModelTest {
+
+    // Subject under test
+    private lateinit var tasksViewModel: TasksViewModel
+
+    // Use a fake repository to be injected into the viewmodel
+    private lateinit var tasksRepository: FakeTestRepository
+
+    // Executes each task synchronously using Architecture Components.
+    @get:Rule
+    var instantExecutorRule = InstantTaskExecutorRule()
+
+    @Before
+    fun setupViewModel() {
+        // We initialise the tasks to 3, with one active and two completed
+        tasksRepository = FakeTestRepository()
+        val task1 = Task("Title1", "Description1")
+        val task2 = Task("Title2", "Description2", true)
+        val task3 = Task("Title3", "Description3", true)
+        tasksRepository.addTasks(task1, task2, task3)
+
+        tasksViewModel = TasksViewModel(tasksRepository)
+    }
+
+    @Test
+    fun addNewTask_setsNewTaskEvent() {
+        // When adding a new task
+        tasksViewModel.addNewTask()
+
+        // Then the new task event is triggered
+        val value = tasksViewModel.newTaskEvent.getOrAwaitValue()
+
+        assertThat(value.getContentIfNotHandled(), not(nullValue()))
+
+        //without hamcrest: assertNotNull(eventValue.getContentIfNotHandled())
+    }
+
+    /**
+     * This test should check that if you've set your filter type to show all tasks,
+     * that the Add task button is visible.
+     */
+    @Test
+    fun setFilterAllTasks_tasksAddViewVisible() {
+        // When the filter type is ALL_TASKS
+        tasksViewModel.setFiltering(TasksFilterType.ALL_TASKS)
+
+        // Then the "Add task" action is visible
+        assertThat(tasksViewModel.tasksAddViewVisible.getOrAwaitValue(), `is`(true))
+
+        // without hamcrest: assertEquals(tasksViewModel.tasksAddViewVisible.getOrAwaitValue(), true)
+    }
+
+}
