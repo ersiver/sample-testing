@@ -1,9 +1,10 @@
 # sample-testing
 This app was built following AndroidDevelopers Codelabs. The app demonstrates:
 
++ A collection of unit, integration and e2e tests
 + Difference between local and instrumentation tests
 + Difference between unit and integration tests
-+ Basics of Espresso and Mockito
++ Espresso and Mockito Frameworks
 + Concept of Test Driven Development
 + Setting up manual dependency injection
 + Creating ServiceLocators 
@@ -12,6 +13,7 @@ This app was built following AndroidDevelopers Codelabs. The app demonstrates:
 + Using runBlocking and runBlockingTest
 + Testing LiveData
 + Writing unit tests for a repository and view model using fakes and dependency injection
++ Writing integration tests for the app-level navigation.
 + Writing integration tests for fragments and view models interactions using Espresso and Mockito frameworks.
 
 
@@ -80,6 +82,40 @@ Espresso is a testing framework for Android to make it easy to write reliable us
   <br><i>onView(withId(R.id.tasks_list))
   .perform(RecyclerViewActions.actionOnItem<RecyclerView
   .ViewHolder>(hasDescendant(withText("TITLE1")),  click())))</i> <br>That statement only finds the item in the RecyclerView that has the text "TITLE1" and click it.
+
+
++ For Espresso UI testing, it's a best practice to turn animations off before implementing anything else.Disable: Window animation scale, Transition animation scale, and Animator duration scale.
+
++ Espresso’s main advantage over other UI testing frameworks is that it synchronizes with your app. Where Espresso cannot tell whether the app is busy updating the UI or not, you can use the idling resource synchronization mechanism. (e.g. Snackbar situation -> Espresso doesn’t really know when your app is idle because it only sees 15 ms in the future and Snackbar.LENGTH_SHORT is 2 seconds. 
+
+## 6. Testing & coroutines
+
++ Code executes either synchronously or asynchronously. When code is running <b>synchronously</b>, a task completely finishes before execution moves to the next task. When code is running <b>asynchronously</b>, tasks run in parallel. 
+
++ Asynchronous code is almost always used for long-running tasks, such as network or database calls. It can also be difficult to test. Asynchronous code tends to be <b>non-deterministic</b>. What this means is that if a test runs operations A and B in parallel, multiple times, sometimes A will finish first, and sometimes B. This can cause <b>flaky</b> tests (tests with inconsistent results). When testing, you often need to ensure some sort of synchronization mechanism for asynchronous code. Synchronization mechanisms are ways to tell the test execution to "wait" until the asynchronous work finishes.
+
++ In Kotlin, a common mechanism for running code asynchronously is coroutines. When testing asynchronous code, you need to make your code deterministic and provide <b>synchronization mechanisms</b>. The following methodologies help with that:
+
+    a) Using <b>runBlockingTest</b> or <b>runBlocking</b>. Use runBlockingTest whenever you want to run a coroutine from a test. Usually,  this is when you need to call a suspend function from a test. When writing test doubles, use runBlocking.
+    
+    b) Using TestCoroutineDispatcher for local tests.
+    
+    c) Pausing coroutine execution to test the state of the code at an exact place in time.
+
++ <b>runBlockingTest</b> takes in a block of code and blocks the test thread until all of the coroutines it starts are finished. It also runs the code in the coroutines immediately (skipping any calls to delay) and in the order they are called–-in short, it runs them in a deterministic order.(runBlockingTest essentially makes your coroutines run like non-coroutines by giving you a coroutine context specifically for test code.)
+
+## 7. Testing database
++ In general, make database tests instrumented tests, meaning they will be in the androidTest source set. This is because, if you run these tests locally, they will use whatever version of SQLite you have on your local machine, which could be very different from the version of SQLite that ships with your Android device. Different Android devices also ship with different SQLite versions, so it's helpful as well to be able to run these tests as instrumented tests on different devices.
+
++ </b>When initializing a database for testing:</b>
+
+    a) Create an in-memory database using Room.inMemoryDatabaseBuilder. Normal databases are meant to persist. By comparison, an in-memory database will be completely deleted once the process that created it is killed, since it's never actually stored on disk. Always use and in-memory database for your tests.
+    
+    b) Use the AndroidX Test libraries' ApplicationProvider.getApplicationContext() method to get the application context.
+    
+    c) Run the test using runBlockingTest because both insertTask and getTaskById are suspend functions.
+    
+    d) You use the DAO as normal, accessing it from your database instance.
 
 ## License
 Copyright 2019 Google, Inc (all resources are from AndroidDevelopers Codelabs).
