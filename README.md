@@ -116,6 +116,19 @@ Espresso is a testing framework for Android to make it easy to write reliable us
     c) Run the test using runBlockingTest because both insertTask and getTaskById are suspend functions.
     
     d) You use the DAO as normal, accessing it from your database instance.
+    
+## TDD - Test Driven Development
+
++ Write the test for a new feature before implementing the feature itself
++ Run the tests a first time - it will fail as the feature is not yet implemented
++ Implement the feature
++ Run the test again and check that it pass
++ In this way you are sure that the test actually tests your code.
+
+This is especially a good process to follow when fixing a bug in a feature:
++ Implement a test that exposes the bug (the test fails)
++ Fix the bug in the codebase
++ Check that the test is now running successfully
 
 ## License
 Copyright 2019 Google, Inc (all resources are from AndroidDevelopers Codelabs).
